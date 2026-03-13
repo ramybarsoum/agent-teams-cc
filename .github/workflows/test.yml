@@ -1,0 +1,31 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Smoke test - team-tools CLI
+        run: node bin/team-tools.cjs current-timestamp
+
+      - name: Run tests
+        run: |
+          if [ -f scripts/run-tests.cjs ]; then
+            node scripts/run-tests.cjs
+          else
+            echo "No test runner found, skipping."
+          fi
