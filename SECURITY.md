@@ -47,6 +47,12 @@ The `.planning/` directory may contain project-specific information including:
 
 These artifacts describe your codebase in detail. Treat them as sensitive project documentation. If your repository is public, consider adding `.planning/` to `.gitignore` or using a separate private branch for planning artifacts.
 
+## Network Activity
+
+Agent Teams includes an optional update checker that runs once per day on session start. It makes a single HTTPS GET request to `registry.npmjs.org` to compare your installed version against the latest published version. No telemetry, analytics, or user data is sent. The response (version number only) is cached locally at `~/.claude/cache/team-update-check.json`.
+
+**Opt-out:** Set `AGENT_TEAMS_NO_UPDATE_CHECK=1` in your environment to disable this completely. You can also disable all hooks during install with `AGENT_TEAMS_NO_HOOKS=1`.
+
 ## Recommendations
 
 1. **Review agent outputs before pushing.** Check `.planning/` files for accidentally included secrets or sensitive paths.

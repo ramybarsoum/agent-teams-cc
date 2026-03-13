@@ -75,16 +75,16 @@ MCP servers, and skills.
 
 /team:help                  This help screen
 
-## vs subagent Commands
+## vs Standard Subagents
 
-| Feature             | /subagent          | /team:*              |
-|---------------------|-----------------|----------------------|
-| CLAUDE.md           | Manual inline   | Auto-loaded          |
-| Parallelism         | Wave batches    | Dependency graph     |
-| MCP/Skills          | Not available   | Full access          |
-| Checkpoints         | Re-spawn agent  | Message + continue   |
-| Plan revisions      | Re-spawn loop   | Persistent messaging |
-| Stability           | Stable          | Experimental         |
+| Feature             | Standard Agent   | /team:*              |
+|---------------------|------------------|----------------------|
+| CLAUDE.md           | Manual inline    | Auto-loaded          |
+| Parallelism         | Wave batches     | Dependency graph     |
+| MCP/Skills          | Not available    | Full access          |
+| Checkpoints         | Re-spawn agent   | Message + continue   |
+| Plan revisions      | Re-spawn loop    | Persistent messaging |
+| Stability           | Stable           | Experimental         |
 
 ## Cross-Compatibility
 

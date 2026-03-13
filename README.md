@@ -33,7 +33,7 @@ Two problems compound as projects grow:
 | **Executor** | `agents/team-executor.md` | Atomic commits per task. 4 deviation rules (auto-fix bugs, add missing security, unblock, ask about architecture). Analysis paralysis guard. Auth gate handling. Self-check before completion. |
 | **Verifier** | `agents/team-verifier.md` | 3-level artifact verification (exists, substantive, wired). 4 key-link patterns with grep commands. Stub detection for React, API routes, and wiring. Structured gap output for re-planning. |
 | **Researcher** | `agents/team-researcher.md` | Context7-first tool strategy. Source hierarchy (HIGH/MEDIUM/LOW). Verification protocol for 4 known pitfalls. Full RESEARCH.md template with validation architecture. |
-| **Mapper** | `agents/team-mapper.md` | 7 document templates (STACK, INTEGRATIONS, ARCHITECTURE, STRUCTURE, CONVENTIONS, TESTING, CONCERNS). Forbidden files security. Prescriptive output for planners and executors. |
+| **Mapper** | `agents/team-mapper.md` | 7 document templates per repo + cross-repo synthesis. Multi-repo and monorepo auto-detection. Forbidden files security. Prescriptive output for planners and executors. |
 | **Orchestrator** | `agents/team-orchestrator.md` | Hybrid model: workflow agents + domain-specific role agents. Dev-QA loops per task. Level 2 (human checkpoints) and Level 3 (fully autonomous) execution. |
 | **Debugger** | `agents/team-debugger.md` | Scientific method debugging: observe, hypothesize, test, conclude. Persistent debug session state across context resets. |
 | **Plan Checker** | `agents/team-plan-checker.md` | Validates plans achieve phase goal before execution. Goal-backward analysis of plan quality. |
@@ -47,7 +47,7 @@ Two problems compound as projects grow:
 | Command | What It Does |
 |---------|-------------|
 | `/team:new-project` | Initialize project with parallel research teammates |
-| `/team:map-codebase` | Map codebase with 4 parallel mappers |
+| `/team:map-codebase` | Map codebase(s) with parallel mappers. Auto-detects monorepo services, multi-repo workspaces, or single repos. |
 | `/team:discuss-phase <N>` | Gather context and decisions before planning |
 | `/team:plan-phase <N>` | Plan phase with researcher + planner + checker |
 | `/team:execute-phase <N>` | Execute phase with parallel executor teammates |
@@ -100,7 +100,7 @@ Two problems compound as projects grow:
 npx agent-teams-cc
 ```
 
-That's it. Copies 10 agents, 27 commands, 24 templates, 9 references, and the CLI tool to `~/.claude/`.
+That's it. Copies 10 agents, 27 commands, 26 templates, 9 references, 3 hooks, and the CLI tool to `~/.claude/`.
 
 Then enable Agent Teams in your Claude Code settings:
 
@@ -167,6 +167,34 @@ Two execution levels:
 - **Level 2**: Human reviews checkpoints
 - **Level 3**: Orchestrator auto-approves, only escalates on 3x failures or compliance flags
 
+## Multi-Repo Mapping
+
+`/team:map-codebase` auto-detects your workspace topology and maps accordingly:
+
+**Auto-detection (Option C):**
+- Monorepo with `services/`, `apps/`, or `packages/` directories: each subdirectory is mapped as its own unit
+- Sibling git repos in a parent directory: each repo is mapped independently
+- Single repo: standard 4-mapper approach
+
+**Explicit config (Option B fallback):**
+If auto-detection doesn't match your layout, create `.planning/workspace.json`:
+
+```json
+{
+  "repos": [
+    { "name": "api-service", "path": "../api-service", "tags": ["backend"] },
+    { "name": "web-app", "path": "../web-app", "tags": ["frontend"] },
+    { "name": "shared-lib", "path": "../shared-lib", "tags": ["shared"] }
+  ]
+}
+```
+
+**What you get:**
+- 7 documents per repo (STACK, INTEGRATIONS, ARCHITECTURE, STRUCTURE, CONVENTIONS, TESTING, CONCERNS) in `.planning/codebase/{repo-name}/`
+- A `CROSS-REPO-SYNTHESIS.md` that maps API contracts, shared packages, message bus topics, shared data stores, deployment boundaries, and integration risk areas across all repos
+
+The synthesizer runs after all per-repo mappers complete. It reads their outputs and identifies the connective tissue between your services.
+
 ## Artifacts
 
 Agent Teams uses a `.planning/` directory structure:
@@ -178,7 +206,16 @@ Agent Teams uses a `.planning/` directory structure:
   STATE.md            # Current position
   REQUIREMENTS.md     # Tracked requirements
   config.json         # Workflow preferences
-  codebase/           # 7 mapper documents
+  workspace.json      # Multi-repo config (auto-generated or manual)
+  codebase/           # Mapper documents
+    CROSS-REPO-SYNTHESIS.md  # Cross-repo contracts (multi-repo only)
+    api-service/      # Per-repo documents (multi-repo)
+      STACK.md
+      INTEGRATIONS.md
+      ARCHITECTURE.md
+      ...
+    web-app/
+      ...
   research/           # Project research (4 dimensions)
   phases/
     01-auth/
@@ -225,21 +262,30 @@ team-tools progress                        # Render progress bar
 
 Requires Node.js 18+. No npm dependencies. Installed automatically by `install.sh`.
 
+## Hooks
+
+Agent Teams installs 3 optional hooks to `~/.claude/hooks/`:
+
+- **team-check-update.js** - Checks npm registry once per day for new versions. Makes one HTTPS GET to `registry.npmjs.org`. No telemetry or user data sent. Opt-out: `AGENT_TEAMS_NO_UPDATE_CHECK=1`
+- **team-statusline.js** - Shows current phase, progress bar, and update notices in the Claude Code status line
+- **team-context-monitor.js** - Warns when context window is running low (75%+ used)
+
+Disable all hooks during install: `AGENT_TEAMS_NO_HOOKS=1 npx agent-teams-cc`
+
 ## What's Included
 
 ```
 agent-teams-cc/
   agents/          10 agent definitions
   commands/        27 slash commands
-  templates/       24 templates
+  templates/       26 templates
   references/       9 reference docs
+  hooks/            3 optional hooks
   bin/             CLI tool (team-tools.cjs + 11 lib modules)
   install.sh       One-command setup
   SECURITY.md      Security considerations
   CONTRIBUTING.md  How to contribute
 ```
-
-**Total: ~86 files, ~20,000 lines.**
 
 ## License
 

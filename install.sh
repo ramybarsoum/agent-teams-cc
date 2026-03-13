@@ -37,6 +37,20 @@ echo "  Copying references..."
 mkdir -p "$CLAUDE_DIR/references/agent-teams"
 cp "$SCRIPT_DIR/references/"*.md "$CLAUDE_DIR/references/agent-teams/" 2>/dev/null || true
 
+# Copy hooks (opt-out with AGENT_TEAMS_NO_HOOKS=1)
+if [ "${AGENT_TEAMS_NO_HOOKS:-0}" != "1" ]; then
+  echo "  Copying hooks..."
+  mkdir -p "$CLAUDE_DIR/hooks"
+  if [ -d "$SCRIPT_DIR/hooks" ]; then
+    cp "$SCRIPT_DIR/hooks/"*.js "$CLAUDE_DIR/hooks/" 2>/dev/null || true
+    chmod +x "$CLAUDE_DIR/hooks/team-"*.js 2>/dev/null || true
+    HOOK_COUNT=$(ls "$SCRIPT_DIR/hooks/"*.js 2>/dev/null | wc -l | tr -d ' ')
+    echo "    $HOOK_COUNT hooks installed (disable: AGENT_TEAMS_NO_HOOKS=1)"
+  fi
+else
+  echo "  Hooks skipped (AGENT_TEAMS_NO_HOOKS=1)"
+fi
+
 # Install CLI tool
 echo "  Installing team-tools CLI..."
 mkdir -p "$CLAUDE_DIR/bin/lib"

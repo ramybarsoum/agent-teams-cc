@@ -76,6 +76,24 @@ function main() {
     console.log(`  CLI installed (team-tools + ${libCount} modules)`);
   }
 
+  // Hooks (optional, disable with AGENT_TEAMS_NO_HOOKS=1)
+  if (process.env.AGENT_TEAMS_NO_HOOKS !== '1') {
+    const hooksDest = path.join(CLAUDE_DIR, 'hooks');
+    ensureDir(hooksDest);
+    const hooksDir = path.join(PKG_DIR, 'hooks');
+    if (fs.existsSync(hooksDir)) {
+      const hookCount = copyFiles(hooksDir, hooksDest, '.js');
+      if (hookCount > 0) {
+        fs.readdirSync(hooksDest)
+          .filter(f => f.startsWith('team-') && f.endsWith('.js'))
+          .forEach(f => fs.chmodSync(path.join(hooksDest, f), '755'));
+        console.log(`  ${hookCount} hooks installed (disable: AGENT_TEAMS_NO_HOOKS=1)`);
+      }
+    }
+  } else {
+    console.log('  Hooks skipped (AGENT_TEAMS_NO_HOOKS=1)');
+  }
+
   // Check env var
   const settingsFile = path.join(CLAUDE_DIR, 'settings.json');
   if (fs.existsSync(settingsFile)) {

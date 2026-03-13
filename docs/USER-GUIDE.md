@@ -53,7 +53,8 @@ After initialization, your `.planning/` directory looks like:
 ```
 .planning/
   PROJECT.md          # Project context and goals
-  STATE.json          # Tracks current phase states
+  STATE.md            # Tracks current phase states
+  config.json         # Workflow preferences
   phases/             # Created as you add phases
 ```
 
@@ -67,13 +68,13 @@ Break your project into numbered phases. Plan one at a time:
 
 This spawns three teammates in sequence:
 
-1. **Researcher** reads the codebase and writes `RESEARCH-1.md` with findings relevant to the phase
-2. **Planner** uses the research to create `PLAN-1.md` with atomic, testable tasks
+1. **Researcher** reads the codebase and writes `01-RESEARCH.md` with findings relevant to the phase
+2. **Planner** uses the research to create `01-01-PLAN.md` (phase-plan format) with atomic, testable tasks
 3. **Plan Checker** validates the plan (no gaps, no conflicts, tasks are actually atomic)
 
 If the checker finds issues, the planner revises automatically. You get the final plan for approval.
 
-Review the plan before moving on. Edit `PLAN-1.md` directly if you want to adjust scope, reorder tasks, or remove items.
+Review the plan before moving on. Edit `01-01-PLAN.md` directly if you want to adjust scope, reorder tasks, or remove items.
 
 ### Adding more phases
 
@@ -93,7 +94,7 @@ Once you approve a plan, execute it:
 
 This spawns one executor teammate per plan. Executors run in parallel when their dependencies allow it. Each executor:
 
-- Reads `PLAN-1.md` for its task list
+- Reads its `PLAN.md` for the task list
 - Makes atomic commits (one commit per task)
 - Messages the orchestrator at checkpoints
 - Stops and asks if it hits something unexpected
@@ -129,7 +130,7 @@ The verifier teammate checks three levels:
 2. **Phase level.** Does the phase work end-to-end as intended?
 3. **Project level.** Does this phase integrate correctly with the rest of the project?
 
-The verifier writes a `VERIFY-1.md` report. If it finds issues, you decide whether to fix them manually or re-execute.
+The verifier writes a `01-VERIFICATION.md` report. If it finds issues, you decide whether to fix them manually or re-execute.
 
 ## Session Management
 
@@ -147,7 +148,7 @@ Shows current state of all phases, plans, and execution status.
 /team:pause-work
 ```
 
-Saves current state to `.planning/STATE.json`. Safe to close Claude Code.
+Saves current state to `.planning/STATE.md`. Safe to close Claude Code.
 
 ### Resume work
 
@@ -163,7 +164,7 @@ Reads state from disk and picks up where you left off. Teammates re-read all `.p
 /team:health
 ```
 
-Validates that `.planning/` files are consistent, STATE.json matches reality, and no plans reference deleted files.
+Validates that `.planning/` files are consistent, STATE.md matches reality, and no plans reference deleted files.
 
 ## Configuration
 
@@ -178,7 +179,7 @@ Lets you adjust:
 - Whether to auto-run tests after each task
 - Verification strictness level
 
-Settings are stored in `.planning/SETTINGS.json`.
+Settings are stored in `.planning/config.json`.
 
 ## Other Useful Commands
 
@@ -225,4 +226,4 @@ Run `/team:list-phase-assumptions 1` to see what the planner assumed. Assumption
 Run `/team:progress` to see which executor paused and why. Check the executor's message log in the orchestrator output. Usually it hit a deviation from the plan and needs guidance.
 
 **State file corrupted**
-Delete `.planning/STATE.json` and run `/team:progress`. The system rebuilds state from the plan and verification files on disk.
+Delete `.planning/STATE.md` and run `/team:progress`. The system rebuilds state from the plan and verification files on disk.
