@@ -219,22 +219,51 @@ Agent Teams uses a `.planning/` directory structure:
 - **Delegate**: Shift+Tab to keep lead coordination-only
 - **Task list**: Ctrl+T to toggle shared task list
 
+## CLI Tool (team-tools)
+
+`team-tools` is a Node.js CLI that handles state management, plan validation, and progress tracking. Agents use it instead of fragile sed-based YAML edits.
+
+```bash
+# State management
+team-tools state advance-plan              # Increment plan counter
+team-tools state update-progress           # Recalculate progress bar
+team-tools state add-decision --summary "Use JWT for auth"
+
+# Phase operations
+team-tools phase add "API endpoints"       # Add phase to roadmap
+team-tools phase insert 3 "Hotfix"         # Insert between phases
+team-tools find-phase 5                    # Find phase directory
+
+# Verification
+team-tools verify plan-structure plan.md   # Validate plan format
+team-tools verify artifacts plan.md        # Check must_haves.artifacts exist
+team-tools verify key-links plan.md        # Check wiring
+
+# Frontmatter
+team-tools frontmatter get plan.md         # Parse YAML frontmatter as JSON
+team-tools frontmatter validate plan.md --schema plan
+
+# Progress
+team-tools progress                        # Render progress bar
+```
+
+Requires Node.js 18+. No npm dependencies. Installed automatically by `install.sh`.
+
 ## What's Included
 
 ```
 agent-teams-cc/
-  agents/          10 agent definitions (planner, executor, verifier, researcher,
-                   mapper, orchestrator, debugger, plan-checker, roadmapper,
-                   research-synthesizer)
-  commands/        27 slash commands (full workflow lifecycle)
-  templates/       24 templates (.planning/ artifacts, research, summaries)
-  references/       9 reference docs (checkpoints, TDD, git, verification)
+  agents/          10 agent definitions
+  commands/        27 slash commands
+  templates/       24 templates
+  references/       9 reference docs
+  bin/             CLI tool (team-tools.cjs + 11 lib modules)
   install.sh       One-command setup
   SECURITY.md      Security considerations
   CONTRIBUTING.md  How to contribute
 ```
 
-**Total: 74 files, ~14,000 lines of methodology.**
+**Total: ~86 files, ~20,000 lines.**
 
 ## License
 
