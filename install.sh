@@ -16,12 +16,24 @@ mkdir -p "$CLAUDE_DIR/commands/team"
 # Copy agent definitions
 echo "  Copying agent definitions..."
 cp "$SCRIPT_DIR/agents/"*.md "$CLAUDE_DIR/agents/"
-echo "    6 agents installed"
+echo "    10 agents installed"
 
 # Copy slash commands
 echo "  Copying slash commands..."
 cp "$SCRIPT_DIR/commands/"*.md "$CLAUDE_DIR/commands/team/"
 echo "    6 commands installed"
+
+# Copy templates
+echo "  Copying templates..."
+mkdir -p "$CLAUDE_DIR/templates/agent-teams"
+mkdir -p "$CLAUDE_DIR/templates/agent-teams/research-project"
+cp "$SCRIPT_DIR/templates/"*.md "$CLAUDE_DIR/templates/agent-teams/" 2>/dev/null || true
+cp "$SCRIPT_DIR/templates/research-project/"*.md "$CLAUDE_DIR/templates/agent-teams/research-project/" 2>/dev/null || true
+
+# Copy references
+echo "  Copying references..."
+mkdir -p "$CLAUDE_DIR/references/agent-teams"
+cp "$SCRIPT_DIR/references/"*.md "$CLAUDE_DIR/references/agent-teams/" 2>/dev/null || true
 
 # Check for Agent Teams env var
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
