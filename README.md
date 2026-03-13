@@ -35,16 +35,63 @@ Two problems compound as projects grow:
 | **Researcher** | `agents/team-researcher.md` | Context7-first tool strategy. Source hierarchy (HIGH/MEDIUM/LOW). Verification protocol for 4 known pitfalls. Full RESEARCH.md template with validation architecture. |
 | **Mapper** | `agents/team-mapper.md` | 7 document templates (STACK, INTEGRATIONS, ARCHITECTURE, STRUCTURE, CONVENTIONS, TESTING, CONCERNS). Forbidden files security. Prescriptive output for planners and executors. |
 | **Orchestrator** | `agents/team-orchestrator.md` | Hybrid model: workflow agents + domain-specific role agents. Dev-QA loops per task. Level 2 (human checkpoints) and Level 3 (fully autonomous) execution. |
+| **Debugger** | `agents/team-debugger.md` | Scientific method debugging: observe, hypothesize, test, conclude. Persistent debug session state across context resets. |
+| **Plan Checker** | `agents/team-plan-checker.md` | Validates plans achieve phase goal before execution. Goal-backward analysis of plan quality. |
+| **Roadmapper** | `agents/team-roadmapper.md` | Creates project roadmaps from requirements. Phase breakdown, requirement mapping, success criteria derivation. |
+| **Research Synthesizer** | `agents/team-research-synthesizer.md` | Combines outputs from parallel researcher agents into a unified SUMMARY.md. |
 
-## Commands
+## Commands (27 total)
+
+### Core Workflow
 
 | Command | What It Does |
 |---------|-------------|
 | `/team:new-project` | Initialize project with parallel research teammates |
 | `/team:map-codebase` | Map codebase with 4 parallel mappers |
+| `/team:discuss-phase <N>` | Gather context and decisions before planning |
 | `/team:plan-phase <N>` | Plan phase with researcher + planner + checker |
 | `/team:execute-phase <N>` | Execute phase with parallel executor teammates |
 | `/team:verify-phase <N>` | Verify phase goal with team verifier |
+| `/team:verify-work <N>` | Conversational UAT with the user |
+
+### Session Management
+
+| Command | What It Does |
+|---------|-------------|
+| `/team:progress` | Show project status, route to next action |
+| `/team:pause-work` | Create context handoff for session break |
+| `/team:resume-work` | Restore context from previous session |
+| `/team:quick` | Ad-hoc task with framework guarantees |
+
+### Roadmap Management
+
+| Command | What It Does |
+|---------|-------------|
+| `/team:add-phase` | Add phase to end of roadmap |
+| `/team:insert-phase` | Insert urgent phase between existing ones |
+| `/team:remove-phase` | Remove a future phase |
+| `/team:new-milestone` | Start new milestone cycle |
+| `/team:complete-milestone` | Archive completed milestone |
+| `/team:audit-milestone` | Audit milestone before archiving |
+
+### Task & Test Management
+
+| Command | What It Does |
+|---------|-------------|
+| `/team:add-todo` | Capture task from conversation context |
+| `/team:check-todos` | List pending todos |
+| `/team:add-tests` | Generate tests for completed phase |
+| `/team:validate-phase` | Audit validation gaps |
+| `/team:list-phase-assumptions` | Surface assumptions before planning |
+
+### Configuration & Maintenance
+
+| Command | What It Does |
+|---------|-------------|
+| `/team:settings` | Configure workflow toggles |
+| `/team:health` | Diagnose .planning/ directory issues |
+| `/team:cleanup` | Archive completed phase directories |
+| `/team:debug` | Systematic debugging with hypothesis tracking |
 | `/team:help` | Show all commands |
 
 ## Install
@@ -62,12 +109,21 @@ chmod +x install.sh
 Or install manually:
 
 ```bash
-# Copy agent definitions
+# Copy agent definitions (10 agents)
 cp agents/*.md ~/.claude/agents/
 
-# Copy slash commands
+# Copy slash commands (27 commands)
 mkdir -p ~/.claude/commands/team
 cp commands/*.md ~/.claude/commands/team/
+
+# Copy templates (24 templates)
+mkdir -p ~/.claude/templates/agent-teams/research-project
+cp templates/*.md ~/.claude/templates/agent-teams/
+cp templates/research-project/*.md ~/.claude/templates/agent-teams/research-project/
+
+# Copy references (9 docs)
+mkdir -p ~/.claude/references/agent-teams
+cp references/*.md ~/.claude/references/agent-teams/
 ```
 
 Then enable Agent Teams in your Claude Code settings:
@@ -162,6 +218,23 @@ Agent Teams uses a `.planning/` directory structure:
 - **Split**: `--teammate-mode tmux` (each teammate in own pane)
 - **Delegate**: Shift+Tab to keep lead coordination-only
 - **Task list**: Ctrl+T to toggle shared task list
+
+## What's Included
+
+```
+agent-teams-cc/
+  agents/          10 agent definitions (planner, executor, verifier, researcher,
+                   mapper, orchestrator, debugger, plan-checker, roadmapper,
+                   research-synthesizer)
+  commands/        27 slash commands (full workflow lifecycle)
+  templates/       24 templates (.planning/ artifacts, research, summaries)
+  references/       9 reference docs (checkpoints, TDD, git, verification)
+  install.sh       One-command setup
+  SECURITY.md      Security considerations
+  CONTRIBUTING.md  How to contribute
+```
+
+**Total: 74 files, ~14,000 lines of methodology.**
 
 ## License
 
