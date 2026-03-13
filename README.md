@@ -97,34 +97,10 @@ Two problems compound as projects grow:
 ## Install
 
 ```bash
-# Clone the repo
-git clone https://github.com/ramybarsoum/agent-teams-cc.git
-
-# Run the install script (copies agents and commands to ~/.claude/)
-cd agent-teams-cc
-chmod +x install.sh
-./install.sh
+npx agent-teams-cc
 ```
 
-Or install manually:
-
-```bash
-# Copy agent definitions (10 agents)
-cp agents/*.md ~/.claude/agents/
-
-# Copy slash commands (27 commands)
-mkdir -p ~/.claude/commands/team
-cp commands/*.md ~/.claude/commands/team/
-
-# Copy templates (24 templates)
-mkdir -p ~/.claude/templates/agent-teams/research-project
-cp templates/*.md ~/.claude/templates/agent-teams/
-cp templates/research-project/*.md ~/.claude/templates/agent-teams/research-project/
-
-# Copy references (9 docs)
-mkdir -p ~/.claude/references/agent-teams
-cp references/*.md ~/.claude/references/agent-teams/
-```
+That's it. Copies 10 agents, 27 commands, 24 templates, 9 references, and the CLI tool to `~/.claude/`.
 
 Then enable Agent Teams in your Claude Code settings:
 

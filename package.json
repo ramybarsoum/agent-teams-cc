@@ -1,0 +1,47 @@
+{
+  "name": "agent-teams-cc",
+  "version": "1.0.0",
+  "description": "Multi-agent coordination framework for Claude Code. Plan, execute, verify, and research with parallel teammates that auto-load your project context.",
+  "bin": {
+    "team-tools": "./bin/team-tools.cjs"
+  },
+  "scripts": {
+    "postinstall": "node postinstall.cjs"
+  },
+  "files": [
+    "agents/**/*.md",
+    "commands/**/*.md",
+    "templates/**/*.md",
+    "references/**/*.md",
+    "bin/**/*.cjs",
+    "postinstall.cjs",
+    "install.sh",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "claude-code",
+    "agent-teams",
+    "multi-agent",
+    "ai-agents",
+    "planning",
+    "verification",
+    "execution",
+    "claude",
+    "anthropic"
+  ],
+  "author": "Ramy Barsoum",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ramybarsoum/agent-teams-cc.git"
+  },
+  "homepage": "https://github.com/ramybarsoum/agent-teams-cc#readme",
+  "bugs": {
+    "url": "https://github.com/ramybarsoum/agent-teams-cc/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
