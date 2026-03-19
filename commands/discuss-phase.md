@@ -60,6 +60,53 @@ ls .planning/codebase/*.md 2>/dev/null
 
 If codebase maps exist, read relevant ones. Otherwise, do targeted grep for terms from the phase goal to find reusable components, patterns, and integration points.
 
+## Step 3b: Fetch Figma Context (for UI phases)
+
+**If the phase involves UI/frontend work** (detected by keywords: component, page, screen, layout, dashboard, form, view, UI, frontend, design):
+
+1. **Ask user for Figma URL** if not already provided:
+   ```
+   This phase involves UI work. Do you have a Figma design URL for this phase?
+
+   Options:
+   1. Yes — paste the Figma URL
+   2. No Figma design — proceed without
+   3. I'll provide it later
+   ```
+
+2. **If Figma URL provided**, fetch design context:
+   ```
+   mcp__claude_ai_Figma__get_design_context(fileKey, nodeId)
+   ```
+
+   Parse the Figma URL to extract fileKey and nodeId:
+   - `figma.com/design/:fileKey/:fileName?node-id=:nodeId` → convert `-` to `:` in nodeId
+   - `figma.com/design/:fileKey/branch/:branchKey/:fileName` → use branchKey as fileKey
+
+3. **Save Figma context** to `${PHASE_DIR}/${PADDED}-FIGMA-CONTEXT.md`:
+   ```markdown
+   # Phase [X]: [Name] - Figma Context
+
+   **Source:** [Figma URL]
+   **Fetched:** [date]
+
+   ## Design Screenshot
+   [screenshot from get_design_context]
+
+   ## Code Hints
+   [code snippets from get_design_context — adapt to HeroUI v3 + @allcare/ui]
+
+   ## Component Mapping
+   [Map Figma components to @allcare/ui components]
+
+   ## Design Annotations
+   [Any designer notes or constraints from the Figma file]
+   ```
+
+4. **Pass to downstream agents**: Planner and executor will reference FIGMA-CONTEXT.md for pixel-accurate implementation.
+
+**If no Figma URL**: Proceed normally. Agents will use `docs/design/DESIGN-SYSTEM-GUIDE.md` and `docs/design/UX-PRINCIPLES.md` for design guidance.
+
 ## Step 4: Analyze Phase
 
 Read ROADMAP.md for phase goal. Identify gray areas using domain-aware heuristic:

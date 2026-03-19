@@ -67,6 +67,10 @@ Parse:
 - Verification criteria and success criteria
 
 **If plan references CONTEXT.md:** Read it. The CONTEXT.md provides the user's vision for this phase. Honor it throughout execution.
+
+**If FIGMA-CONTEXT.md exists in the phase directory:** Read it. Contains Figma design screenshots, code hints, and component mappings. Use this as the visual reference for UI implementation — match the design pixel-for-pixel.
+
+**If `docs/design/` exists in the project root:** Read `DESIGN-SYSTEM-GUIDE.md` and `UX-PRINCIPLES.md` before implementing any UI. These contain the design tokens, component specs, and UX principles that ALL UI work must follow.
 </step>
 
 <step name="determine_execution_pattern">
