@@ -30,6 +30,22 @@ This is the Agent Teams version of `/team:plan-phase`. Produces identical PLAN.m
 
 <process>
 
+## Step 0: Resolve Model Profile
+
+```bash
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+```
+
+**Model lookup table:**
+
+| Agent | quality | balanced | budget |
+|-------|---------|----------|--------|
+| team-researcher | opus | sonnet | haiku |
+| team-planner | opus | sonnet | sonnet |
+| team-plan-checker | sonnet | sonnet | haiku |
+
+Pass `model="{resolved_model}"` when spawning researcher, planner, and checker teammates.
+
 ## Step 1: Validate Phase
 
 ```bash
@@ -53,6 +69,29 @@ cat .planning/STATE.md 2>/dev/null
 cat .planning/REQUIREMENTS.md 2>/dev/null
 cat .planning/config.json 2>/dev/null
 ```
+
+**Check for DESIGN.md (design-first gate):**
+```bash
+ls "$PHASE_DIR"/*-DESIGN.md 2>/dev/null
+```
+
+If NO DESIGN.md exists AND this is NOT `--gaps` mode:
+- Display warning:
+  ```
+  ⚠ No DESIGN.md found for this phase.
+
+  Design-first planning produces better outcomes. Consider running:
+    /team:discuss-phase {X}
+
+  This creates a design spec with approach analysis and spec review
+  before planning begins.
+
+  Proceed without design? [y/N]
+  ```
+- Use AskUserQuestion to confirm. If user says no, exit and suggest `/team:discuss-phase`.
+- If user says yes, proceed (design is recommended, not hard-blocked, to avoid breaking existing workflows).
+
+If DESIGN.md exists: Pass it to the planner as additional context. The planner MUST honor the selected approach and constraints from the design spec.
 
 **Parse flags:**
 - `--research` / `--skip-research`: Force research on/off
@@ -136,6 +175,13 @@ Task(team_name="phase-{X}-plan", name="planner",
 **Phase:** {X} - {name}
 **Phase directory:** {phase_dir}
 **Phase goal:** {goal}
+
+{If DESIGN.md exists:}
+**Design spec:** Read {phase_dir}/*-DESIGN.md FIRST. You MUST honor:
+- The selected approach (do not deviate to a rejected alternative)
+- Constraints and decisions locked in the design
+- Success criteria (map these to must_haves)
+- Key files and data flow (use as starting point for task file lists)
 
 {If gap closure mode:}
 **Mode:** Gap closure. Read {phase_dir}/*-VERIFICATION.md for gaps to address.

@@ -1,6 +1,6 @@
 ---
 name: team-plan-checker
-description: Verifies plans will achieve phase goal before execution. Goal-backward analysis across 8 dimensions. Spawned by /team:plan-phase after planner creates PLAN.md.
+description: Verifies plans will achieve phase goal before execution. Goal-backward analysis across 9 dimensions (includes TDD compliance). Spawned by /team:plan-phase after planner creates PLAN.md.
 tools: Read, Bash, Glob, Grep
 color: green
 ---
@@ -172,6 +172,34 @@ For each `<task>` in each plan:
 - Flag tasks with no automated verification as warnings
 - Flag entire plans where no tasks have automated verification as blockers
 
+## Dimension 9: TDD Compliance
+
+**Question:** Do tasks with testable behavior have proper TDD structure?
+
+For each `<task>` in each plan:
+
+1. **Identify testable tasks:** Tasks that create/modify functions, endpoints, components, handlers, validators, or any behavioral code
+2. **Check TDD flag:** Testable tasks MUST have `tdd="true"` attribute
+3. **Check TDD structure:** TDD tasks must have:
+   - `<behavior>` section describing expected behavior (what the test checks)
+   - `<implementation>` section describing the code to write
+   - Test file listed in `<files>` section
+4. **Check test-first ordering:** Within each TDD task, the test file should appear before the implementation file in `<files>`
+
+**Red flags:**
+- Task creates an API endpoint but has no `tdd="true"` → **blocker**
+- Task has `tdd="true"` but no `<behavior>` section → **blocker** (test can't be written without behavior spec)
+- Task modifies business logic with no test coverage → **warning**
+- Plan has zero TDD tasks but creates behavioral code → **blocker**
+- Task labeled "too simple to test" → **blocker** (no task is too simple)
+
+**Exemptions (no TDD required):**
+- Pure configuration tasks (env vars, build config)
+- Documentation-only tasks
+- Dependency installation tasks
+- Static asset tasks (images, fonts, CSS-only)
+- Checkpoint tasks
+
 </verification_dimensions>
 
 <process>
@@ -203,7 +231,7 @@ Parse frontmatter (depends_on, wave, requirements, must_haves) and task structur
 </step>
 
 <step name="verify_dimensions">
-Run all 8 verification dimensions against the loaded plans. Collect issues.
+Run all 9 verification dimensions against the loaded plans. Collect issues.
 
 For each issue, record:
 ```yaml
@@ -217,7 +245,7 @@ issue:
 </step>
 
 <step name="determine_verdict">
-**passed:** All requirements covered, all tasks complete, dependency graph valid, key links planned, scope within budget, must_haves properly derived.
+**passed:** All requirements covered, all tasks complete, dependency graph valid, key links planned, scope within budget, must_haves properly derived, TDD compliance verified.
 
 **issues_found:** One or more blockers or warnings. Plans need revision.
 
@@ -305,13 +333,14 @@ Plans verified. Ready for execution.
 - [ ] Phase goal extracted from ROADMAP.md
 - [ ] All PLAN.md files loaded and parsed
 - [ ] must_haves parsed from each plan frontmatter
-- [ ] All 8 verification dimensions checked
+- [ ] All 9 verification dimensions checked
 - [ ] Requirement coverage validated (all requirements have tasks)
 - [ ] Task completeness validated (all required fields present)
 - [ ] Dependency graph verified (no cycles, valid references)
 - [ ] Key links checked (wiring planned, not just artifacts)
 - [ ] Scope assessed (within context budget)
 - [ ] Context compliance checked (if CONTEXT.md provided)
+- [ ] TDD compliance validated (testable tasks have tdd="true" + behavior sections)
 - [ ] Overall status determined (passed | issues_found)
 - [ ] Structured result sent to lead via SendMessage
 </success_criteria>

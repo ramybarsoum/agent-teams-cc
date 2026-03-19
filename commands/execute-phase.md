@@ -29,6 +29,26 @@ This is the Agent Teams version of `/team:execute-phase`. Uses the same `.planni
 
 <process>
 
+## Step 0: Resolve Model Profile
+
+```bash
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+```
+
+Default to "balanced" if not set.
+
+**Model lookup table:**
+
+| Agent | quality | balanced | budget |
+|-------|---------|----------|--------|
+| team-executor | opus | sonnet | sonnet |
+| team-verifier | sonnet | sonnet | haiku |
+| team-task-reviewer | sonnet | haiku | haiku |
+
+Store resolved models for use in Task calls. Pass `model="{resolved_model}"` when spawning executor and verifier teammates.
+
+**Usage:** When spawning an executor, add `model="{executor_model}"` to the Task call. When spawning the verifier, add `model="{verifier_model}"`.
+
 ## Step 1: Validate Phase
 
 ```bash
@@ -79,6 +99,43 @@ Extract from each plan:
 - `files_modified` list
 
 Build dependency map: plan ID to list of plan IDs it depends on.
+
+## Step 3b: Handle Git Branching
+
+Read branching strategy from config:
+
+```bash
+BRANCHING_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"branching_strategy"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "none")
+PHASE_BRANCH_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"phase_branch_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "team/phase-{phase}-{slug}")
+MILESTONE_BRANCH_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"milestone_branch_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "team/{milestone}-{slug}")
+```
+
+**If strategy is "none" (default):** Skip branching, continue on current branch.
+
+**If strategy is "phase":** Create/switch to phase-specific branch:
+
+```bash
+PHASE_NAME=$(basename "$PHASE_DIR" | sed 's/^[0-9]*-//')
+PHASE_SLUG=$(echo "$PHASE_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
+BRANCH_NAME=$(echo "$PHASE_BRANCH_TEMPLATE" | sed "s/{phase}/$PADDED_PHASE/g" | sed "s/{slug}/$PHASE_SLUG/g")
+git checkout -b "$BRANCH_NAME" 2>/dev/null || git checkout "$BRANCH_NAME"
+```
+
+**If strategy is "milestone":** Create/switch to milestone-level branch:
+
+```bash
+MILESTONE_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+' .planning/ROADMAP.md | head -1 || echo "v1.0")
+MILESTONE_SLUG=$(grep -A1 "## .*$MILESTONE_VERSION" .planning/ROADMAP.md | tail -1 | sed 's/.*- //' | cut -d'(' -f1 | tr -d ' ' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' || echo "milestone")
+BRANCH_NAME=$(echo "$MILESTONE_BRANCH_TEMPLATE" | sed "s/{milestone}/$MILESTONE_VERSION/g" | sed "s/{slug}/$MILESTONE_SLUG/g")
+git checkout -b "$BRANCH_NAME" 2>/dev/null || git checkout "$BRANCH_NAME"
+```
+
+Display branching status:
+```
+Branching: {strategy} → {branch_name}
+```
+
+**Note:** All subsequent commits go to this branch. User handles merging based on their workflow.
 
 ## Step 4: Create Team
 
@@ -217,12 +274,42 @@ When verifier messages back:
 Score: {N}/{M} must-haves verified
 ```
 
-Update ROADMAP.md (mark phase complete), STATE.md (update position), REQUIREMENTS.md (check off requirements).
+Update ROADMAP.md (mark phase complete, add completion date), STATE.md (update position), REQUIREMENTS.md (check off requirements).
+
+Evolve PROJECT.md if it exists:
+- Move validated requirements from Active to Validated
+- Add emerged requirements to Active
+- Log key decisions from phase SUMMARY files
+- Update "Last updated" footer
 
 **If gaps_found:**
 Present gaps to user. Offer:
-- `/team:plan-phase {X} --gaps` to create gap closure plans
-- `/team:execute-phase {X} --gaps-only` to re-execute after gap planning
+```
+## Gaps Found
+
+**Score:** {N}/{M} must-haves verified
+**Report:** {phase_dir}/{phase}-VERIFICATION.md
+
+### What's Missing
+
+{Extract gap summaries from VERIFICATION.md gaps section}
+
+---
+
+## Next Up
+
+**Plan gap closure** — create additional plans to complete the phase
+
+`/team:plan-phase {X} --gaps`
+
+<sub>`/clear` first for fresh context window</sub>
+
+---
+
+**Also available:**
+- `cat {phase_dir}/{phase}-VERIFICATION.md` — see full report
+- `/team:verify-work {X}` — manual testing before planning
+```
 
 **If human_needed:**
 Present human verification items. Ask user to test and confirm.
@@ -246,6 +333,7 @@ Commit all planning artifacts:
 ```bash
 git add .planning/STATE.md .planning/ROADMAP.md
 git add "$PHASE_DIR"/*-VERIFICATION.md
+git add .planning/REQUIREMENTS.md 2>/dev/null
 git commit -m "docs({phase}): phase {X} execution complete
 
 Status: {passed/gaps_found/human_needed}
@@ -254,14 +342,92 @@ Plans executed: {count}
 "
 ```
 
-Offer next steps:
-```
-## Next Steps
+## Step 11: Smart Next-Step Routing
 
-- `/team:plan-phase {X+1}` — Plan next phase
-- `/team:verify-phase {X}` — Re-verify this phase
-- `/team:help` — Check overall project progress
+**MANDATORY: Check milestone status before presenting next steps.**
+
+**Step 11a: Determine milestone position**
+
+```bash
+# Count total phases in current milestone
+grep -c "Phase [0-9]" .planning/ROADMAP.md 2>/dev/null
+# Get highest phase number
+grep -oE "Phase ([0-9]+)" .planning/ROADMAP.md | tail -1
+# Check which phases are complete
+grep -E "\[x\].*Phase" .planning/ROADMAP.md 2>/dev/null
 ```
+
+State: "Current phase is {X}. Milestone has {N} phases (highest: {Y})."
+
+**Step 11b: Route based on milestone status**
+
+| Condition | Meaning | Action |
+|-----------|---------|--------|
+| current phase < highest phase | More phases remain | Route A |
+| current phase = highest phase | Milestone complete | Route B |
+
+---
+
+**Route A: More phases remain in milestone**
+
+Read ROADMAP.md to get the next phase's name and goal.
+
+```
+## Phase {X} Complete
+
+---
+
+## Next Up
+
+**Phase {X+1}: {Name}** — {Goal from ROADMAP.md}
+
+`/team:plan-phase {X+1}`
+
+<sub>`/clear` first for fresh context window</sub>
+
+---
+
+**Also available:**
+- `/team:discuss-phase {X+1}` — gather context and create design spec first
+- `/team:verify-work {X}` — manual testing before moving on
+- `/team:progress` — review overall project status
+
+---
+```
+
+---
+
+**Route B: Milestone complete (all phases done)**
+
+```
+## Phase {X}: {Phase Name} Complete
+
+MILESTONE COMPLETE — all {N} phases finished!
+
+---
+
+## Next Up
+
+**Complete Milestone** — archive and prepare for next
+
+`/team:complete-milestone`
+
+<sub>`/clear` first for fresh context window</sub>
+
+---
+
+**Also available:**
+- `/team:audit-milestone` — audit completion before archiving
+- Review accomplishments before archiving
+
+---
+```
+
+---
+
+**Route C: Gaps found (no next-step routing — already handled in Step 9)**
+
+If verification status was `gaps_found`, Step 9 already presented gap closure instructions. Do NOT present Route A or B.
 
 </process>
 

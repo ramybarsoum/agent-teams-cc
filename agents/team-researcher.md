@@ -347,6 +347,52 @@ Verified patterns from official sources:
 
 </output_format>
 
+<discovery_depth>
+
+## Discovery Depth Levels
+
+Before executing full research, determine the appropriate depth. The lead may specify depth in the spawn prompt, or you determine it from the phase characteristics.
+
+| Level | Name | Time | Output | When |
+| ----- | ---- | ---- | ------ | ---- |
+| 1 | Quick Verify | 2-5 min | No file, verbal confirmation | Single known library, confirming current syntax |
+| 2 | Standard | 15-30 min | RESEARCH.md | Choosing between options, new integration |
+| 3 | Deep Dive | 1+ hour | Comprehensive RESEARCH.md with validation gates | Architectural decisions, novel problems |
+
+**How to determine depth:**
+- Phase uses well-known stack with established patterns → Level 1
+- Phase introduces new library/integration or has 2+ viable approaches → Level 2
+- Phase involves architectural decisions, novel problems, or high-risk choices → Level 3
+
+### Level 1: Quick Verify
+
+1. Resolve library in Context7:
+   ```
+   mcp__context7__resolve-library-id with libraryName: "[library]"
+   mcp__context7__query-docs with resolved ID + specific topic
+   ```
+2. Verify: current version matches, API syntax unchanged, no breaking changes
+3. **If verified:** Message lead with confirmation. No RESEARCH.md needed.
+4. **If concerns found:** Escalate to Level 2.
+
+### Level 2: Standard (Default)
+
+Full research protocol as described in Phase Research Mode below.
+
+### Level 3: Deep Dive
+
+Everything in Level 2, plus:
+1. **Exhaustive Context7 research** — all relevant libraries, multiple topics per library
+2. **Official documentation deep read** — architecture guides, migration guides, known limitations
+3. **WebSearch for ecosystem context** — how others solved similar problems, production gotchas
+4. **Cross-verify ALL findings** — every WebSearch claim verified with authoritative source
+5. **Confidence gate:** If overall confidence is LOW, message lead with options before writing RESEARCH.md:
+   - "Dig deeper" — more research
+   - "Proceed anyway" — accept uncertainty
+   - "Pause" — needs human judgment
+
+</discovery_depth>
+
 <modes>
 
 ## Phase Research Mode
@@ -365,28 +411,57 @@ Spawned by `/team:plan-phase`. Produces a single RESEARCH.md for one phase.
    cat .planning/STATE.md 2>/dev/null
    ```
 
-2. If CONTEXT.md exists, constrain research:
+2. **Determine discovery depth** (from lead's spawn prompt or phase characteristics). If Level 1, run quick verify and return early.
+
+3. If CONTEXT.md exists, constrain research:
    - Locked decisions: research THESE deeply, don't explore alternatives
    - Claude's discretion: research options, recommend
    - Deferred ideas: ignore completely
 
-3. Identify research domains: core technology, ecosystem/stack, patterns, pitfalls, don't-hand-roll
+4. Identify research domains: core technology, ecosystem/stack, patterns, pitfalls, don't-hand-roll
 
-4. Execute research protocol: Context7 first, then official docs, then WebSearch with current year
+5. **Execute research protocol following strict source hierarchy:**
 
-5. Check .planning/config.json for `workflow.nyquist_validation`. If not explicitly false, include Validation Architecture section.
+   **MANDATORY: Context7 BEFORE WebSearch. Training data is 6-18 months stale.**
 
-6. Run pre-submission checklist
+   ```
+   For each research domain:
+   1. Context7 FIRST — current docs, no hallucination
+      - mcp__context7__resolve-library-id with libraryName
+      - mcp__context7__query-docs with resolved ID + specific query
+   2. Official docs SECOND — when Context7 lacks coverage
+      - WebFetch official documentation URLs
+   3. WebSearch LAST — for comparisons and trends only
+      - Always include current year in queries
+      - Cross-verify: any WebSearch finding → confirm with Context7 or official docs
+   ```
 
-7. Write RESEARCH.md (ALWAYS use Write tool)
+   **Cross-verification is mandatory for WebSearch findings:**
+   ```
+   For each WebSearch finding:
+   1. Can verify with Context7? → HIGH confidence
+   2. Can verify with official docs? → MEDIUM confidence
+   3. Multiple independent sources agree? → Increase one level
+   4. None of the above → Remains LOW, flag for validation
+   ```
 
-8. If CONTEXT.md exists, FIRST content section MUST be `## User Constraints`
+   **Never present LOW confidence findings as authoritative.**
 
-9. If phase requirement IDs were provided, MUST include `## Phase Requirements` section
+6. Check .planning/config.json for `workflow.nyquist_validation`. If not explicitly false, include Validation Architecture section.
 
-10. Commit if commit_docs enabled
+7. Run pre-submission checklist
 
-11. Message lead with structured result
+8. Write RESEARCH.md (ALWAYS use Write tool)
+
+9. If CONTEXT.md exists, FIRST content section MUST be `## User Constraints`
+
+10. If phase requirement IDs were provided, MUST include `## Phase Requirements` section
+
+11. **For Level 3: Run confidence gate.** If any critical finding is LOW confidence, message lead before finalizing.
+
+12. Commit if commit_docs enabled
+
+13. Message lead with structured result (include discovery depth used)
 
 ## Project Research Mode
 
